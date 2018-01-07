@@ -29,62 +29,32 @@ class Game:
 
         self.add_four = False
 
-        # Add to the map two 'two's'
+        # Add to the map two 'two' tiles
         for i in range(2):
-            self.add_new_number()
+            self.add_random_tile()
 
         self.score = 0
 
-    def move(self, direction):
+    def shift(self, direction):
         """Main magic is done here."""
-        if direction == 'w':
-            for i in range(4, 16):
-                i = abs(i)
-                if len(self.game_map[i - 4]) <= 0:
-                    self.game_map[i - 4] = self.game_map[i]
-                    self.game_map[i] = ''
+        w = {'w': (4, 16, -4, []),
+             's': (-11, 1, 4, []),
+             'd': (-15, 1, 1, [3, 7, 11, 15]),
+             'a': (0, 16, -1, [0, 4, 8, 12])}
 
-                elif self.game_map[i - 4] == self.game_map[i]:
-                    self.game_map[i - 4] = str(int(self.game_map[i]) * 2)
-                    self.score += (int(self.game_map[i]) * 2)
-                    self.game_map[i] = ''
+        for i in range(w[direction][0], w[direction][1]):
+            i = abs(i)
+            if i in w[direction][3]:
+                continue
 
-        elif direction == 's':
-            for i in range(-11, 1):
-                i = abs(i)
-                if len(self.game_map[i + 4]) <= 0:
-                    self.game_map[i + 4] = self.game_map[i]
-                    self.game_map[i] = ''
-                elif self.game_map[i + 4] == self.game_map[i]:
-                    self.game_map[i + 4] = str(int(self.game_map[i]) * 2)
-                    self.score += (int(self.game_map[i]) * 2)
-                    self.game_map[i] = ''
+            if len(self.game_map[i + w[direction][2]]) <= 0:
+                self.game_map[i + w[direction][2]] = self.game_map[i]
+                self.game_map[i] = ''
 
-        elif direction == 'd':
-            for i in range(-15, 1):
-                i = abs(i)
-                if i in [3, 7, 11, 15]:
-                    continue
-                if len(self.game_map[i + 1]) <= 0:
-                    self.game_map[i + 1] = self.game_map[i]
-                    self.game_map[i] = ''
-                elif self.game_map[i + 1] == self.game_map[i]:
-                    self.game_map[i + 1] = str(int(self.game_map[i]) * 2)
-                    self.score += (int(self.game_map[i]) * 2)
-                    self.game_map[i] = ''
-
-        elif direction == 'a':
-            for i in range(0, 16):
-
-                if i in [0, 4, 8, 12]:
-                    continue
-                if len(self.game_map[i - 1]) <= 0:
-                    self.game_map[i - 1] = self.game_map[i]
-                    self.game_map[i] = ''
-                elif self.game_map[i - 1] == self.game_map[i]:
-                    self.game_map[i - 1] = str(int(self.game_map[i]) * 2)
-                    self.score += (int(self.game_map[i]) * 2)
-                    self.game_map[i] = ''
+            elif self.game_map[i + w[direction][2]] == self.game_map[i]:
+                self.game_map[i + w[direction][2]] = str(int(self.game_map[i]) * 2)
+                self.score += (int(self.game_map[i]) * 2)
+                self.game_map[i] = ''
 
     def run_game(self):
         """Takes user input and does something with it."""
@@ -98,16 +68,19 @@ class Game:
               'Press ENTER to begin playing game'
               )
 
-        # Wait until player presses ENTER, can/should be removed
+        # Wait until player presses ENTER, can/should be reshiftd
         wait = input()
-        self.get_game_map()
+        self.print_game_map()
 
         while True:
-            ui = input()
+            ui = input().lower()
+            while not self.check_user_input(ui):
+                self.print_game_map()
+                ui = input().lower()
             # Quick-save
             if ui == 'qs':
                 self.save_game()
-                self.get_game_map()
+                self.print_game_map()
                 continue
             # Quit game
             elif ui == 'q':
@@ -116,15 +89,15 @@ class Game:
             # Load saved game
             elif ui == 'l':
                 self.load_game()
-                self.get_game_map()
+                self.print_game_map()
                 continue
 
-            self.move(ui)
-            self.add_new_number()
-            self.get_game_map()
+            self.shift(ui)
+            self.add_random_tile()
+            self.print_game_map()
 
-    def add_new_number(self):
-        """Adds new number after move is done."""
+    def add_random_tile(self):
+        """Adds new number after shift is done."""
         if self.add_four is False:
             for i in range(16):
                 if self.game_map[i] == '4':
@@ -143,7 +116,12 @@ class Game:
 
         self.game_map[n] = choice(choices)
 
-    def get_game_map(self):
+    @staticmethod
+    def check_user_input(ui):
+        """Check if user input is correct."""
+        return ui in ['w', 'a', 's', 'd', 'q', 'qs', 'l']
+
+    def print_game_map(self):
         """Prints out map."""
         os.system('cls')
         m = self.game_map
@@ -160,7 +138,6 @@ class Game:
     def save_game(self):
         """Saves game into txt file."""
         print(f'YOU SAVED GAME WITH TOTAL SCORE OF {self.score}')
-
         f = open('save.txt', 'w')
         f.write('Score:\n')
         f.write(str(self.score))
@@ -170,7 +147,7 @@ class Game:
         f.close()
 
     def load_game(self):
-        """Loads saved game from txt file"""
+        """Loads saved game from txt file."""
         f = open('save.txt', 'r').readlines()
         self.score = int(f[1].strip('\n'))
         for i in range(16):
