@@ -1,6 +1,6 @@
 ## DISCLAIMER:
-- Code below is my attempt to recreate the game '2048'.
-- Code below is not understandable and clean at all, someday, i hope, it will be :)
+- Code below is my attempt to recreate game '2048'.
+- Code below is not understandable and clean at all, someday, I hope, it will be :)
 - It is not the correct way how to do it!
 
 **If you want to try this yourself, be aware that:**

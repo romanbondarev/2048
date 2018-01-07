@@ -2,9 +2,9 @@
 Self-made game '2048'.
 
 DISCLAIMER:
-Code below is my attempt to recreate the game '2048'.
-Code below is not understandable and clean at all, someday, i hope, it will be :)
-It is not the correct way how to do it!
+- Code below is my attempt to recreate game '2048'.
+- Code below is not understandable and clean at all, someday, i hope, it will be :)
+- It is not the correct way how to do it!
 
 If you want to try this yourself, be aware that:
 - if you are using macOS or linux: change os.system('cls') to os.system('clear').
