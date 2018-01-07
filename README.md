@@ -4,7 +4,7 @@
 - It is not the correct way how to do it!
 
 **If you want to try this yourself, be aware that:**
-- If you are using macOS or linux: change *os.system('cls')* to *os.system('clear')*.
+- If you are using macOS or linux: change *self.clear* from *'cls'* to *'clear'*.
 - Input is case sensitive!
 - Many 'features' are not implemented yet.
 - Gameplay is not 100% identical... yet.

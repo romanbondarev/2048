@@ -3,11 +3,11 @@ Self-made game '2048'.
 
 DISCLAIMER:
 - Code below is my attempt to recreate game '2048'.
-- Code below is not understandable and clean at all, someday, i hope, it will be :)
+- Code below is not understandable and clean at all, someday, I hope, it will be :)
 - It is not the correct way how to do it!
 
 If you want to try this yourself, be aware that:
-- if you are using macOS or linux: change os.system('cls') to os.system('clear').
+- if you are using macOS or linux: change self.clear from 'cls' to 'clear'.
 - input is case sensitive!
 - many 'features' are not implemented yet.
 - gameplay is not 100% identical... yet.
@@ -27,13 +27,14 @@ class Game:
                          8: '', 9: '', 10: '', 11: '',
                          12: '', 13: '', 14: '', 15: ''}
 
+        self.clear = 'cls'
+        self.win = False
         self.add_four = False
+        self.score = 0
 
         # Add to the map two 'two' tiles
         for i in range(2):
             self.add_random_tile()
-
-        self.score = 0
 
     def shift(self, direction):
         """Main magic is done here."""
@@ -68,7 +69,7 @@ class Game:
               'Press ENTER to begin playing game'
               )
 
-        # Wait until player presses ENTER, can/should be reshiftd
+        # Wait until player presses ENTER, can/should be removed
         wait = input()
         self.print_game_map()
 
@@ -93,6 +94,8 @@ class Game:
                 continue
 
             self.shift(ui)
+            if self.win is False and self.has_won():
+                break
             self.add_random_tile()
             self.print_game_map()
 
@@ -116,6 +119,25 @@ class Game:
 
         self.game_map[n] = choice(choices)
 
+    def has_won(self):
+        """Check for the winning position."""
+        for i in range(16):
+            if self.game_map[i] == '2048':
+                self.win = True
+                os.system(self.clear)
+                print(" __   __         __      __          _ \n"
+                      " \ \ / /__ _  _  \ \    / /__ _ _   | |\n"
+                      "  \ V / _ \ || |  \ \/\/ / _ \ ' \  |_|\n"
+                      "   |_|\___/\_,_|   \_/\_/\___/_||_| (_)\n")
+
+                ui = input("Do you want to continue? y/n\n").lower()
+                if ui == 'y':
+                    self.save_game()
+                    return False
+                elif ui == 'n':
+                    self.save_game()
+                    return True
+
     @staticmethod
     def check_user_input(ui):
         """Check if user input is correct."""
@@ -123,7 +145,7 @@ class Game:
 
     def print_game_map(self):
         """Prints out map."""
-        os.system('cls')
+        os.system(self.clear)
         m = self.game_map
         print((f' SCORE: {self.score} ').center(24, '='))
         for i in range(0, 16):
