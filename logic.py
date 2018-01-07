@@ -13,8 +13,8 @@ If you want to try this yourself, be aware that:
 - gameplay is not 100% identical... yet.
 """
 
-from random import *
 import os
+from random import *
 
 
 class Game:
@@ -38,27 +38,40 @@ class Game:
 
     def shift(self, direction):
         """Main magic is done here."""
-        w = {'w': (4, 16, -4, []),
-             's': (-11, 1, 4, []),
-             'd': (-15, 1, 1, [3, 7, 11, 15]),
-             'a': (0, 16, -1, [0, 4, 8, 12])}
+        w = {'w': ([4, 12, 8, 4, 12, 8], -4, range(4)),
+             's': ([8, 0, 4, 8, 0, 4], 4, range(4)),
+             'a': ([1, 2, 3, 1, 2, 3], -1, [0, 4, 8, 12]),
+             'd': ([2, 1, 0, 2, 1, 0], 1, [0, 4, 8, 12])}
 
-        for i in range(w[direction][0], w[direction][1]):
-            i = abs(i)
-            if i in w[direction][3]:
-                continue
+        for c in w[direction][2]:
+            counter = 0
+            cntr = self.coun(c, direction)
+            for i in w[direction][0]:
+                # for i in [4, 8, 12, 4, 8, 4]:
+                if len(self.game_map[c + i + w[direction][1]]) <= 0:
+                    self.game_map[c + i + w[direction][1]] = self.game_map[c + i]
+                    self.game_map[c + i] = ''
+                elif self.game_map[c + i + w[direction][1]] == self.game_map[c + i] and counter < cntr:
+                    counter += 1
+                    a = str(int(self.game_map[c + i]))
+                    if self.game_map[c + i + w[direction][1]] == a:
+                        self.game_map[c + i + w[direction][1]] = str(int(self.game_map[c + i]) * 2)
+                        self.score += int(self.game_map[c + i]) * 2
+                        self.game_map[c + i] = ''
 
-            if len(self.game_map[i + w[direction][2]]) <= 0:
-                self.game_map[i + w[direction][2]] = self.game_map[i]
-                self.game_map[i] = ''
-
-            elif self.game_map[i + w[direction][2]] == self.game_map[i]:
-                self.game_map[i + w[direction][2]] = str(int(self.game_map[i]) * 2)
-                self.score += (int(self.game_map[i]) * 2)
-                self.game_map[i] = ''
+    def coun(self, i, direction):
+        counter = 0
+        w = {'w': ([4, 8, 12], -4), 's': ([8, 4, 0], 4), 'a': ([1, 2, 3], -1), 'd': ([2, 1, 0], 1)}
+        for s in w[direction][0]:
+            if self.game_map[i + s] == self.game_map[i + s + w[direction][1]]:
+                counter += 1
+        if counter > 2:
+            counter = 2
+        return counter
 
     def run_game(self):
         """Takes user input and does something with it."""
+        os.system(self.clear)
         print('WELCOME TO GAME 2048 v0.1\n'
               'Your goal is to to get 2048!\n\n'
               'HOW TO PLAY:\n'
