@@ -8,9 +8,7 @@ DISCLAIMER:
 
 If you want to try this yourself, be aware that:
 - if you are using macOS or linux: change self.clear from 'cls' to 'clear'.
-- input is case sensitive!
 - many 'features' are not implemented yet.
-- gameplay is not 100% identical... yet.
 """
 
 import os
@@ -19,16 +17,16 @@ from random import *
 
 
 class Game:
-    """Game."""
+    """Game class."""
 
     def __init__(self):
-        """Setup the map."""
+        """Game setup."""
         self.game_map = {0: '', 1: '', 2: '', 3: '',
                          4: '', 5: '', 6: '', 7: '',
                          8: '', 9: '', 10: '', 11: '',
                          12: '', 13: '', 14: '', 15: ''}
 
-        self.clear = 'cls'
+        self.clear_mode = 'cls'
         self.win = False
         self.add_four = False
         self.run_once = True
@@ -37,97 +35,118 @@ class Game:
         for i in range(2):
             self.add_random_tile()
 
-    def shift(self, direction):
-        """Main magic is done here."""
-        w = {'w': ([4, 8, 12] * 3, -4, range(4)),
-             's': ([8, 4, 0] * 3, 4, range(4)),
-             'a': ([1, 2, 3] * 3, -1, range(0, 13, 4)),
-             'd': ([2, 1, 0] * 3, 1, range(0, 13, 4))}
-
-        for c in w[direction][2]:
-            counter = 0
-            cntr = self.coun(c, direction)
-            for i in w[direction][0]:
-                # for i in [4, 8, 12, 4, 8, 4]:
-                if len(self.game_map[c + i + w[direction][1]]) <= 0:
-                    self.game_map[c + i + w[direction][1]] = self.game_map[c + i]
-                    self.game_map[c + i] = ''
-                elif self.game_map[c + i + w[direction][1]] == self.game_map[c + i] and counter < cntr:
-                    counter += 1
-                    a = str(int(self.game_map[c + i]))
-                    if self.game_map[c + i + w[direction][1]] == a:
-                        self.game_map[c + i + w[direction][1]] = str(int(self.game_map[c + i]) * 2)
-                        self.score += int(self.game_map[c + i]) * 2
-                        self.game_map[c + i] = ''
-
-    def coun(self, i, direction):
-        w = {'w': ([0, 4, 8, 12], -4), 's': ([12, 8, 4, 0], 4), 'a': ([0, 1, 2, 3], -1), 'd': ([3, 2, 1, 0], 1)}
-        temp = []
-        for l in w[direction][0]:
-            temp.append(self.game_map[i + l])
-        counter = self.count_similar(sorted(temp))
-        if counter > 2:
-            counter = 2
-        return counter
-
-    @staticmethod
-    def count_similar(ui):
-        if len(ui) < 2:
-            return 0
-        elif ui[0] == ui[1]:
-            return 1 + Game.count_similar(ui[2:])
-        else:
-            return 0 + Game.count_similar(ui[1:])
+    def clear(self):
+        """Cleat console."""
+        os.system(self.clear_mode)
 
     def run_game(self):
-        """Takes user input and does something with it."""
-
+        """Main loop."""
         self.print_game_map()
+
         while True:
             ui = input().lower()
+
+            # Ask for new input if it's not correct
             while not self.check_user_input(ui):
                 self.print_game_map()
                 ui = input().lower()
+
             # Quick-save
             if ui == 'qs':
                 self.save_game()
                 time.sleep(0.5)
                 self.print_game_map()
                 continue
+
             # Quit game
             elif ui == 'q':
                 self.save_game()
                 break
+
             # Load saved game
             elif ui == 'l':
                 self.load_game()
                 self.print_game_map()
                 continue
 
+            # Shift tiles
             self.shift(ui)
+
+            # Check if the game is won
             if self.win is False and self.has_won():
                 break
+
+            # Add random tile
             self.print_game_map()
             time.sleep(0.2)
-            # self.add_random_tile()
             if self.add_random_tile():
                 print("\nGAME OVER!")
                 self.save_game()
                 for i in range(-3, 0):
-                    print(f'Game will close in {abs(i)} seconds.')
+                    print('Game will close in {} seconds.'.format(abs(i)))
                     time.sleep(1)
                 break
+
+            # Print game
             self.print_game_map()
 
+    def shift(self, direction):
+        """Main magic is done here."""
+        w = {'w': ([4, 8, 12], -4, range(4)), 's': ([8, 4, 0], 4, range(4)),
+             'a': ([1, 2, 3], -1, range(0, 13, 4)), 'd': ([2, 1, 0], 1, range(0, 13, 4))}
+
+        for c in w[direction][2]:  # 'w': range(4)
+            counter = 0
+            shifts = self.possible_shifts(c, direction)
+            for i in w[direction][0] * 3:  # 'w': [4, 8, 12]
+                current = c + i
+                # If next tile is empty
+                if self.game_map[current + w[direction][1]] == '':
+                    self.game_map[current + w[direction][1]] = self.game_map[current]
+                    self.game_map[current] = ''
+                # If next tile and current tile equal
+                elif self.game_map[current + w[direction][1]] == self.game_map[current] and counter < shifts and \
+                        self.game_map[current + w[direction][1]] == str(int(self.game_map[current])):
+                    # Multiply next tile by 2
+                    self.game_map[current + w[direction][1]] = str(int(self.game_map[current]) * 2)
+                    # Update score
+                    self.score += int(self.game_map[current]) * 2
+                    # Remove number from current tile
+                    self.game_map[current] = ''
+                    counter += 1
+
+    def possible_shifts(self, i, direction):
+        """Get the amount of possible shifts for given direction direction at given column/row."""
+        w = {'w': ([0, 4, 8, 12], -4), 's': ([12, 8, 4, 0], 4), 'a': ([0, 1, 2, 3], -1), 'd': ([3, 2, 1, 0], 1)}
+        values_for_comparing = []
+
+        for l in w[direction][0]:
+            values_for_comparing.append(self.game_map[i + l])
+
+        shifts = self.count_similar(sorted(values_for_comparing))
+        if shifts > 2: shifts = 2
+
+        return shifts
+
+    @staticmethod
+    def count_similar(n):
+        """Get the amount of similar pairs. Recursion."""
+        if len(n) < 2:
+            return 0
+        elif n[0] == n[1]:
+            return 1 + Game.count_similar(n[2:])
+        else:
+            return 0 + Game.count_similar(n[1:])
+
     def add_random_tile(self):
-        """Adds new number after shift is done."""
+        """Adds new number to the random place after shift is done."""
         if self.add_four is False:
             for i in range(16):
                 if self.game_map[i] == '4':
                     self.add_four = True
                     break
 
-        choices = ['2', '2', '2']
+        choices = ['2', '2', '2', '2']
         n = randint(0, 15)
 
         temp = []
@@ -146,7 +165,7 @@ class Game:
         for i in range(16):
             if self.game_map[i] == '2048':
                 self.win = True
-                os.system(self.clear)
+                self.clear()
                 print(" __   __         __      __          _ \n"
                       " \ \ / /__ _  _  \ \    / /__ _ _   | |\n"
                       "  \ V / _ \ || |  \ \/\/ / _ \ ' \  |_|\n"
@@ -167,7 +186,7 @@ class Game:
 
     def print_game_map(self):
         """Prints out map."""
-        os.system(self.clear)
+        self.clear()
         if self.run_once or 1:
             print('PLAY 2048 GAME v1.0\n'
                   'Join the numbers and get to the 2048 tile!\n\n'
@@ -180,19 +199,19 @@ class Game:
             self.run_once = False
 
         m = self.game_map
-        print((f' SCORE: {self.score} ').center(24, '='))
+        print(' SCORE: {} '.format(self.score).center(24, '='))
         for i in range(0, 16):
             if i % 4 == 0 and i != 0:
                 print('\n-----+-----+-----+------')
             if i in [0, 1, 2, 4, 5, 6, 8, 9, 10, 12, 13, 14]:
-                print(f'{m[i].center(5)}|', end='')
+                print('{}|'.format(m[i].center(5)), end='')
             else:
-                print(f'{m[i].center(5)}', end='')
+                print('{}'.format(m[i].center(5)), end='')
         print("\n========================")
 
     def save_game(self):
         """Saves game into txt file."""
-        print(f'GAME IS SAVED WITH TOTAL SCORE OF {self.score}')
+        print('GAME IS SAVED WITH TOTAL SCORE OF {}'.format(self.score))
         f = open('save.txt', 'w')
         f.write('Score:\n')
         f.write(str(self.score))
