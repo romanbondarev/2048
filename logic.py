@@ -31,9 +31,9 @@ class Game:
         self.clear = 'cls'
         self.win = False
         self.add_four = False
+        self.run_once = True
         self.score = 0
 
-        # Add to the map two 'two' tiles
         for i in range(2):
             self.add_random_tile()
 
@@ -61,17 +61,13 @@ class Game:
                         self.game_map[c + i] = ''
 
     def coun(self, i, direction):
-        counter = 0
         w = {'w': ([0, 4, 8, 12], -4), 's': ([12, 8, 4, 0], 4), 'a': ([0, 1, 2, 3], -1), 'd': ([3, 2, 1, 0], 1)}
         temp = []
         for l in w[direction][0]:
             temp.append(self.game_map[i + l])
-        temp = sorted(temp)
-
-        counter = self.count_similar(temp)
+        counter = self.count_similar(sorted(temp))
         if counter > 2:
             counter = 2
-        print(temp, counter)
         return counter
 
     @staticmethod
@@ -85,19 +81,7 @@ class Game:
 
     def run_game(self):
         """Takes user input and does something with it."""
-        os.system(self.clear)
-        print('WELCOME TO GAME 2048 v1.0\n'
-              'Your goal is to to get 2048!\n\n'
-              'HOW TO PLAY:\n'
-              'l - load lastly saved game.\n'
-              'q - save and quit game.\n'
-              'qs - quicksave, continue game.\n'
-              'wasd - to navigate.\n\n'
-              'Press ENTER to begin playing game'
-              )
 
-        # Wait until player presses ENTER, can/should be removed
-        wait = input()
         self.print_game_map()
         while True:
             ui = input().lower()
@@ -107,6 +91,7 @@ class Game:
             # Quick-save
             if ui == 'qs':
                 self.save_game()
+                time.sleep(0.5)
                 self.print_game_map()
                 continue
             # Quit game
@@ -124,7 +109,14 @@ class Game:
                 break
             self.print_game_map()
             time.sleep(0.2)
-            self.add_random_tile()
+            # self.add_random_tile()
+            if self.add_random_tile():
+                print("\nGAME OVER!")
+                self.save_game()
+                for i in range(-3, 0):
+                    print(f'Game will close in {abs(i)} seconds.')
+                    time.sleep(1)
+                break
             self.print_game_map()
 
     def add_random_tile(self):
@@ -138,8 +130,10 @@ class Game:
         choices = ['2', '2', '2']
         n = randint(0, 15)
 
+        temp = []
         while len(self.game_map[n]) > 0:
-            print('New rand')
+            if len(temp) > 200: return True
+            temp.append(True)
             n = randint(0, 15)
 
         if self.add_four:
@@ -174,6 +168,17 @@ class Game:
     def print_game_map(self):
         """Prints out map."""
         os.system(self.clear)
+        if self.run_once or 1:
+            print('PLAY 2048 GAME v1.0\n'
+                  'Join the numbers and get to the 2048 tile!\n\n'
+                  'HOW TO PLAY:\n'
+                  ' - Use your WASD keys to move the tiles.\n'
+                  ' - When two tiles with the same number touch, they merge into one!\n'
+                  ' - Press "l" to load lastly saved game.\n'
+                  ' - Press "q" to save and quit game.\n'
+                  ' - Press "qs" to quicksave and continue game.\n\n')
+            self.run_once = False
+
         m = self.game_map
         print((f' SCORE: {self.score} ').center(24, '='))
         for i in range(0, 16):
@@ -187,7 +192,7 @@ class Game:
 
     def save_game(self):
         """Saves game into txt file."""
-        print(f'YOU SAVED GAME WITH TOTAL SCORE OF {self.score}')
+        print(f'GAME IS SAVED WITH TOTAL SCORE OF {self.score}')
         f = open('save.txt', 'w')
         f.write('Score:\n')
         f.write(str(self.score))
