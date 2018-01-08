@@ -14,6 +14,7 @@ If you want to try this yourself, be aware that:
 """
 
 import os
+import time
 from random import *
 
 
@@ -38,10 +39,10 @@ class Game:
 
     def shift(self, direction):
         """Main magic is done here."""
-        w = {'w': ([4, 12, 8, 4, 12, 8], -4, range(4)),
-             's': ([8, 0, 4, 8, 0, 4], 4, range(4)),
-             'a': ([1, 2, 3, 1, 2, 3], -1, [0, 4, 8, 12]),
-             'd': ([2, 1, 0, 2, 1, 0], 1, [0, 4, 8, 12])}
+        w = {'w': ([4, 8, 12] * 3, -4, range(4)),
+             's': ([8, 4, 0] * 3, 4, range(4)),
+             'a': ([1, 2, 3] * 3, -1, range(0, 13, 4)),
+             'd': ([2, 1, 0] * 3, 1, range(0, 13, 4))}
 
         for c in w[direction][2]:
             counter = 0
@@ -61,18 +62,31 @@ class Game:
 
     def coun(self, i, direction):
         counter = 0
-        w = {'w': ([4, 8, 12], -4), 's': ([8, 4, 0], 4), 'a': ([1, 2, 3], -1), 'd': ([2, 1, 0], 1)}
-        for s in w[direction][0]:
-            if self.game_map[i + s] == self.game_map[i + s + w[direction][1]]:
-                counter += 1
+        w = {'w': ([0, 4, 8, 12], -4), 's': ([12, 8, 4, 0], 4), 'a': ([0, 1, 2, 3], -1), 'd': ([3, 2, 1, 0], 1)}
+        temp = []
+        for l in w[direction][0]:
+            temp.append(self.game_map[i + l])
+        temp = sorted(temp)
+
+        counter = self.count_similar(temp)
         if counter > 2:
             counter = 2
+        print(temp, counter)
         return counter
+
+    @staticmethod
+    def count_similar(ui):
+        if len(ui) < 2:
+            return 0
+        elif ui[0] == ui[1]:
+            return 1 + Game.count_similar(ui[2:])
+        else:
+            return 0 + Game.count_similar(ui[1:])
 
     def run_game(self):
         """Takes user input and does something with it."""
         os.system(self.clear)
-        print('WELCOME TO GAME 2048 v0.1\n'
+        print('WELCOME TO GAME 2048 v1.0\n'
               'Your goal is to to get 2048!\n\n'
               'HOW TO PLAY:\n'
               'l - load lastly saved game.\n'
@@ -85,7 +99,6 @@ class Game:
         # Wait until player presses ENTER, can/should be removed
         wait = input()
         self.print_game_map()
-
         while True:
             ui = input().lower()
             while not self.check_user_input(ui):
@@ -109,6 +122,8 @@ class Game:
             self.shift(ui)
             if self.win is False and self.has_won():
                 break
+            self.print_game_map()
+            time.sleep(0.2)
             self.add_random_tile()
             self.print_game_map()
 
