@@ -53,18 +53,16 @@ class Game:
                 self.clear()
                 answer = input('Reset Progress & Start New Game? y/n: ').lower()
                 if answer == 'y':
-                    for c in range(16): self.game_map[c] = ''
-                    for i in range(2): self.add_random_tile()
-                    self.save_game()
-                    self.win, self.add_four, self.score = False, False, 0
+                    self.start_new_game()
+                self.save_game()
                 self.print_game_map()
                 continue
 
             # Quit game
             elif ui == 'q':
                 self.clear()
-                print('Quiting game...')
                 self.save_game()
+                print('Quiting game...')
                 time.sleep(3)
                 break
 
@@ -84,8 +82,8 @@ class Game:
             # Or there are no more empty tiles left
             if self.win is False and self.has_won() or self.add_random_tile():
                 self.clear()
-                print('Quiting game...')
                 self.save_game()
+                print('Quiting game...')
                 time.sleep(3)
                 break
 
@@ -167,7 +165,7 @@ class Game:
     def has_won(self):
         """Check for the winning position."""
         for i in range(16):
-            if self.game_map[i] == '8':
+            if self.game_map[i] == '2048':
                 self.win = True
                 self.clear()
                 print(" __   __         __      __          _ \n"
@@ -190,7 +188,8 @@ class Game:
               'HOW TO PLAY:\n'
               ' - Use your WASD keys to move the tiles.\n'
               ' - When two tiles with the same number touch, they merge into one!\n'
-              ' - Press "q" to quit game.\n')
+              ' - Press "q" to quit game.\n'
+              ' - Press "n" to start a new game.\n')
 
         m = self.game_map
         print(' SCORE: {} '.format(self.score).center(24, '='))
@@ -201,6 +200,12 @@ class Game:
             else:
                 print('{}|'.format(m[i].center(5)), end='')
         print("\n========================")
+
+    def start_new_game(self):
+        """Start new game."""
+        self.win, self.add_four, self.score = False, False, 0
+        for c in range(16): self.game_map[c] = ''
+        for i in range(2): self.add_random_tile()
 
     def save_game(self):
         """Save game into txt file."""
@@ -213,11 +218,15 @@ class Game:
 
     def load_game(self):
         """Load saved game from txt file."""
-        f = open('save.txt', 'r').readlines()
-        self.score = int(f[1].strip('\n'))
-        self.win = f[20]
-        for i in range(16):
-            self.game_map[i] = f[i + 4].strip('\n')
+        try:
+            f = open('save.txt', 'r').readlines()
+        except FileNotFoundError:
+            self.start_new_game()
+        else:
+            self.score = int(f[1].strip('\n'))
+            self.win = f[20]
+            for i in range(16):
+                self.game_map[i] = f[i + 4].strip('\n')
 
 
 if __name__ == '__main__':
