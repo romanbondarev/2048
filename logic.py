@@ -29,11 +29,8 @@ class Game:
         self.clear_mode = 'cls'
         self.win = False
         self.add_four = False
-        self.run_once = True
         self.score = 0
-
-        for i in range(2):
-            self.add_random_tile()
+        self.load_game()
 
     def clear(self):
         """Clear console."""
@@ -51,16 +48,24 @@ class Game:
                 self.print_game_map()
                 ui = input().lower()
 
-            # Quick-save
-            if ui == 'qs':
-                self.save_game()
-                time.sleep(0.5)
+            # New game
+            if ui == 'n':
+                self.clear()
+                answer = input('Reset Progress & Start New Game? y/n: ').lower()
+                if answer == 'y':
+                    for c in range(16): self.game_map[c] = ''
+                    for i in range(2): self.add_random_tile()
+                    self.save_game()
+                    self.win, self.add_four, self.score = False, False, 0
                 self.print_game_map()
                 continue
 
             # Quit game
             elif ui == 'q':
+                self.clear()
+                print('Quiting game...')
                 self.save_game()
+                time.sleep(3)
                 break
 
             # Load saved game
@@ -72,20 +77,20 @@ class Game:
             # Shift tiles
             self.shift(ui)
 
-            # Check if the game is won
-            if self.win is False and self.has_won():
-                break
-
-            # Add random tile
+            # Check if the game is won and add tile at random place
             self.print_game_map()
             time.sleep(0.2)
-            if self.add_random_tile():
-                print("\nGAME OVER!")
+            # If user don't want to continue the game
+            # Or there are no more empty tiles left
+            if self.win is False and self.has_won() or self.add_random_tile():
+                self.clear()
+                print('Quiting game...')
                 self.save_game()
-                for i in range(-3, 0):
-                    print('Game will close in {} seconds.'.format(abs(i)))
-                    time.sleep(1)
+                time.sleep(3)
                 break
+
+            # Save game
+            self.save_game()
 
             # Print game
             self.print_game_map()
@@ -155,48 +160,37 @@ class Game:
             temp.append(True)
             n = randint(0, 15)
 
-        if self.add_four:
-            choices += ['4', '4']
+        if self.add_four: choices += ['4', '4']
 
         self.game_map[n] = choice(choices)
 
     def has_won(self):
         """Check for the winning position."""
         for i in range(16):
-            if self.game_map[i] == '2048':
+            if self.game_map[i] == '8':
                 self.win = True
                 self.clear()
                 print(" __   __         __      __          _ \n"
                       " \ \ / /__ _  _  \ \    / /__ _ _   | |\n"
                       "  \ V / _ \ || |  \ \/\/ / _ \ ' \  |_|\n"
                       "   |_|\___/\_,_|   \_/\_/\___/_||_| (_)\n")
-
-                ui = input("Do you want to continue? y/n\n").lower()
-                if ui == 'y':
-                    self.save_game()
-                    return False
-                elif ui == 'n':
-                    self.save_game()
-                    return True
+                ui = input("Do you want to continue? y/n: ").lower()
+                if ui == 'n': return True
 
     @staticmethod
     def check_user_input(ui):
         """Check if user input is correct."""
-        return ui in ['w', 'a', 's', 'd', 'q', 'qs', 'l']
+        return ui in ['w', 'a', 's', 'd', 'q', 'l', 'n']
 
     def print_game_map(self):
         """Prints out map."""
         self.clear()
-        if self.run_once or 1:
-            print('PLAY 2048 GAME v1.0\n'
-                  'Join the numbers and get to the 2048 tile!\n\n'
-                  'HOW TO PLAY:\n'
-                  ' - Use your WASD keys to move the tiles.\n'
-                  ' - When two tiles with the same number touch, they merge into one!\n'
-                  ' - Press "l" to load lastly saved game.\n'
-                  ' - Press "q" to save and quit game.\n'
-                  ' - Press "qs" to quicksave and continue game.\n\n')
-            self.run_once = False
+        print('PLAY 2048 GAME v1.0\n'
+              'Join the numbers and get to the 2048 tile!\n\n'
+              'HOW TO PLAY:\n'
+              ' - Use your WASD keys to move the tiles.\n'
+              ' - When two tiles with the same number touch, they merge into one!\n'
+              ' - Press "q" to quit game.\n')
 
         m = self.game_map
         print(' SCORE: {} '.format(self.score).center(24, '='))
@@ -210,17 +204,18 @@ class Game:
 
     def save_game(self):
         """Save game into txt file."""
-        print('GAME IS SAVED WITH TOTAL SCORE OF {}'.format(self.score))
         f = open('save.txt', 'w')
         f.write('Score:\n' + str(self.score) + '\n\nSaved game:\n')
         for i in range(16):
             f.write(self.game_map[i] + '\n')
+        f.write('\n' + str(self.win))
         f.close()
 
     def load_game(self):
         """Load saved game from txt file."""
         f = open('save.txt', 'r').readlines()
         self.score = int(f[1].strip('\n'))
+        self.win = f[20]
         for i in range(16):
             self.game_map[i] = f[i + 4].strip('\n')
 
