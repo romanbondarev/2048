@@ -36,7 +36,7 @@ class Game:
             self.add_random_tile()
 
     def clear(self):
-        """Cleat console."""
+        """Clear console."""
         os.system(self.clear_mode)
 
     def run_game(self):
@@ -116,7 +116,7 @@ class Game:
                     counter += 1
 
     def possible_shifts(self, i, direction):
-        """Get the amount of possible shifts for given direction direction at given column/row."""
+        """Get the amount of possible shifts for given direction at given column/row."""
         w = {'w': ([0, 4, 8, 12], -4), 's': ([12, 8, 4, 0], 4), 'a': ([0, 1, 2, 3], -1), 'd': ([3, 2, 1, 0], 1)}
         values_for_comparing = []
 
@@ -139,7 +139,7 @@ class Game:
             return 0 + Game.count_similar(n[1:])
 
     def add_random_tile(self):
-        """Adds new number to the random place after shift is done."""
+        """Add new tile at the random place after shift is done."""
         if self.add_four is False:
             for i in range(16):
                 if self.game_map[i] == '4':
@@ -201,27 +201,24 @@ class Game:
         m = self.game_map
         print(' SCORE: {} '.format(self.score).center(24, '='))
         for i in range(0, 16):
-            if i % 4 == 0 and i != 0:
-                print('\n-----+-----+-----+------')
-            if i in [0, 1, 2, 4, 5, 6, 8, 9, 10, 12, 13, 14]:
-                print('{}|'.format(m[i].center(5)), end='')
-            else:
+            if i % 4 == 0 and i != 0: print('\n-----+-----+-----+------')
+            if i % 4 == 3:
                 print('{}'.format(m[i].center(5)), end='')
+            else:
+                print('{}|'.format(m[i].center(5)), end='')
         print("\n========================")
 
     def save_game(self):
-        """Saves game into txt file."""
+        """Save game into txt file."""
         print('GAME IS SAVED WITH TOTAL SCORE OF {}'.format(self.score))
         f = open('save.txt', 'w')
-        f.write('Score:\n')
-        f.write(str(self.score))
-        f.write('\n\nSaved game:\n')
+        f.write('Score:\n' + str(self.score) + '\n\nSaved game:\n')
         for i in range(16):
             f.write(self.game_map[i] + '\n')
         f.close()
 
     def load_game(self):
-        """Loads saved game from txt file."""
+        """Load saved game from txt file."""
         f = open('save.txt', 'r').readlines()
         self.score = int(f[1].strip('\n'))
         for i in range(16):
