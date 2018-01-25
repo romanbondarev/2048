@@ -141,7 +141,7 @@ class Game:
         """Add new tile at the random place after shift is done."""
         if self.add_four is False:
             for i in range(16):
-                if self.game_map[i] == '4':
+                if self.game_map[i] == '2048':
                     self.add_four = True
                     break
 
