@@ -161,7 +161,7 @@ class Game:
     def has_won(self):
         """Check for the winning position."""
         for i in range(16):
-            if self.game_map[i] == '4':
+            if self.game_map[i] == '2048':
                 self.win = True
                 self.clear()
                 print(" __   __         __      __          _ \n"
