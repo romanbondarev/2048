@@ -1,22 +1,13 @@
-"""
-Self-made game '2048'.
-
-DISCLAIMER:
-- Code below is my attempt to recreate game '2048'.
-- Code below is not understandable and clean at all, someday, I hope, it will be :)
-- It is not the correct way how to do it!
-"""
-
 import os
 import time
 from random import *
 
 
 class Game:
-    """Game class."""
+    """2048 game."""
 
     def __init__(self):
-        """Game setup."""
+        """Gamemap and variable initialization."""
         self.game_map = {0: '', 1: '', 2: '', 3: '',
                          4: '', 5: '', 6: '', 7: '',
                          8: '', 9: '', 10: '', 11: '',
@@ -29,33 +20,31 @@ class Game:
         self.load_game()
 
     def clear(self):
-        """Clear console."""
+        """Clears the console."""
         os.system(self.clear_mode)
 
     def run_game(self):
-        """Main loop."""
+        """Main game loop."""
         self.print_game_map()
 
         while True:
-            ui = input().lower()
-
-            # Ask for new input if it's not correct
-            while not self.check_user_input(ui):
+            user_input = input().lower()
+            while not self.check_user_input(user_input):
                 self.print_game_map()
-                ui = input().lower()
+                user_input = input().lower()
 
-            # New game
-            if ui == 'n':
+            # Start the new game
+            if user_input == 'n':
                 self.clear()
-                answer = input('Reset Progress & Start New Game? y/n: ').lower()
-                if answer == 'y':
+                reset = input('Reset Progress & Start New Game? y/n: ').lower()
+                if reset == 'y':
                     self.start_new_game()
                 self.save_game()
                 self.print_game_map()
                 continue
 
             # Quit game
-            elif ui == 'q':
+            elif user_input == 'q':
                 self.clear()
                 self.save_game()
                 print('Quiting game...')
@@ -63,19 +52,17 @@ class Game:
                 break
 
             # Load saved game
-            elif ui == 'l':
+            elif user_input == 'l':
                 self.load_game()
                 self.print_game_map()
                 continue
 
             # Shift tiles
-            self.shift(ui)
+            self.shift(user_input)
 
-            # Check if the game is won and add tile at random place
             self.print_game_map()
             time.sleep(0.2)
-            # If user don't want to continue the game
-            # Or there are no more empty tiles left
+            # Check for the winning position and try to add a new tile
             if self.win is False and self.has_won() or self.add_random_tile():
                 self.clear()
                 self.save_game()
@@ -90,46 +77,46 @@ class Game:
             self.print_game_map()
 
     def shift(self, direction):
-        """Main magic is done here."""
-        w = {'w': ([4, 8, 12], -4, range(4)), 's': ([8, 4, 0], 4, range(4)),
-             'a': ([1, 2, 3], -1, range(0, 13, 4)), 'd': ([2, 1, 0], 1, range(0, 13, 4))}
+        """Tile shifting."""
+        moves = {'w': ([4, 8, 12], -4, range(4)), 's': ([8, 4, 0], 4, range(4)),
+                 'a': ([1, 2, 3], -1, range(0, 13, 4)), 'd': ([2, 1, 0], 1, range(0, 13, 4))}
 
-        for c in w[direction][2]:  # 'w': range(4)
+        for c in moves[direction][2]:  # 'w': range(4)
             counter = 0
             shifts = self.possible_shifts(c, direction)
-            for i in w[direction][0] * 3:  # 'w': [4, 8, 12]
+            for i in moves[direction][0] * 3:  # 'w': [4, 8, 12]
                 current = c + i
                 # If next tile is empty
-                if self.game_map[current + w[direction][1]] == '':
-                    self.game_map[current + w[direction][1]] = self.game_map[current]
+                if self.game_map[current + moves[direction][1]] == '':
+                    self.game_map[current + moves[direction][1]] = self.game_map[current]
                     self.game_map[current] = ''
-                # If next tile and current tile equal
-                elif self.game_map[current + w[direction][1]] == self.game_map[current] and counter < shifts and \
-                        self.game_map[current + w[direction][1]] == str(int(self.game_map[current])):
+                # If next tile and current tile are the same
+                elif self.game_map[current + moves[direction][1]] == self.game_map[current] and counter < shifts and \
+                        self.game_map[current + moves[direction][1]] == str(int(self.game_map[current])):
                     # Multiply next tile by 2
-                    self.game_map[current + w[direction][1]] = str(int(self.game_map[current]) * 2)
+                    self.game_map[current + moves[direction][1]] = str(int(self.game_map[current]) * 2)
                     # Update score
                     self.score += int(self.game_map[current]) * 2
                     # Remove number from current tile
                     self.game_map[current] = ''
                     counter += 1
 
-    def possible_shifts(self, i, direction):
-        """Get the amount of possible shifts for given direction at given column/row."""
-        w = {'w': ([0, 4, 8, 12], -4), 's': ([12, 8, 4, 0], 4), 'a': ([0, 1, 2, 3], -1), 'd': ([3, 2, 1, 0], 1)}
-        values_for_comparing = []
+    def possible_shifts(self, row, direction):
+        """Gets the amount of possible shifts for given direction at given column/row."""
+        moves = {'w': ([0, 4, 8, 12], -4), 's': ([12, 8, 4, 0], 4), 'a': ([0, 1, 2, 3], -1), 'd': ([3, 2, 1, 0], 1)}
+        values_to_compare = []
 
-        for l in w[direction][0]:
-            values_for_comparing.append(self.game_map[i + l])
+        for l in moves[direction][0]:
+            values_to_compare.append(self.game_map[row + l])
 
-        shifts = self.count_similar(sorted(values_for_comparing))
+        shifts = self.count_similar(sorted(values_to_compare))
         if shifts > 2: shifts = 2
 
         return shifts
 
     @staticmethod
     def count_similar(n):
-        """Get the amount of similar pairs. Recursion."""
+        """Gets the amount of similar pairs."""
         if len(n) < 2:
             return 0
         elif n[0] == n[1]:
@@ -138,30 +125,32 @@ class Game:
             return 0 + Game.count_similar(n[1:])
 
     def add_random_tile(self):
-        """Add new tile at the random place after shift is done."""
+        """Adds a new tile at the random place."""
         if self.add_four is False:
             for i in range(16):
-                if self.game_map[i] == '2048':
+                if self.game_map[i] == '4':
                     self.add_four = True
                     break
 
         choices = ['2', '2', '2', '2']
         n = randint(0, 15)
 
-        temp = []
+        counter = 0
+        # If tile is not empty at random value place, generate a new random value
+        # Timeout after 200 tries
         while len(self.game_map[n]) > 0:
-            if len(temp) > 200: return True
-            temp.append(True)
+            if counter > 200: return True
+            counter += 1
             n = randint(0, 15)
 
         if self.add_four: choices += ['4', '4']
-
         self.game_map[n] = choice(choices)
+        return False
 
     def has_won(self):
-        """Check for the winning position."""
+        """Checks for the winning position."""
         for i in range(16):
-            if self.game_map[i] == '4':
+            if self.game_map[i] == '2048':
                 self.win = True
                 self.clear()
                 print(" __   __         __      __          _ \n"
@@ -169,12 +158,14 @@ class Game:
                       "  \ V / _ \ || |  \ \/\/ / _ \ ' \  |_|\n"
                       "   |_|\___/\_,_|   \_/\_/\___/_||_| (_)\n")
                 ui = input("Do you want to continue? y/n: ").lower()
-                if ui == 'n': return True
+                if ui == 'n':
+                    return True
+        return False
 
     @staticmethod
-    def check_user_input(ui):
-        """Check if user input is correct."""
-        return ui in ['w', 'a', 's', 'd', 'q', 'l', 'n']
+    def check_user_input(user_input):
+        """Checks if user's input is correct."""
+        return user_input in ['w', 'a', 's', 'd', 'q', 'l', 'n']
 
     def print_game_map(self):
         """Prints out map."""
@@ -198,13 +189,13 @@ class Game:
         print("\n========================")
 
     def start_new_game(self):
-        """Start new game."""
+        """Starts a new game."""
         self.win, self.add_four, self.score = False, False, 0
         for c in range(16): self.game_map[c] = ''
         for i in range(2): self.add_random_tile()
 
     def save_game(self):
-        """Save game into txt file."""
+        """Saves game into txt file."""
         f = open('save.txt', 'w')
         f.write('Score:\n' + str(self.score) + '\n\nSaved game:\n')
         for i in range(16):
@@ -213,16 +204,16 @@ class Game:
         f.close()
 
     def load_game(self):
-        """Load saved game from txt file."""
+        """Loads saved game from txt file."""
         try:
-            f = open('save.txt', 'r').readlines()
+            file = open('save.txt', 'r').readlines()
         except FileNotFoundError:
             self.start_new_game()
         else:
-            self.score = int(f[1].strip('\n'))
-            self.win = f[21]
+            self.score = int(file[1].strip('\n'))
+            self.win = file[21]
             for i in range(16):
-                self.game_map[i] = f[i + 4].strip('\n')
+                self.game_map[i] = file[i + 4].strip('\n')
 
 
 if __name__ == '__main__':
